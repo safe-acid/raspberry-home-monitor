@@ -11,3 +11,14 @@ pip install fastapi uvicorn adafruit-circuitpython-ads1x15
 
 mkdir -p static
 nano static/index.html
+
+
+source .venv/bin/activate
+uvicorn app:app --host 0.0.0.0 --port 8000
+
+sudo nano /etc/systemd/system/pressure-web.service
+
+sudo systemctl daemon-reload
+sudo systemctl enable --now pressure-web
+sudo systemctl status pressure-web
+
