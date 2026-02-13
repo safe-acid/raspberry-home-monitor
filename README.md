@@ -1,5 +1,5 @@
 # Raspberry Home
-🏠 Pressure + temperature monitor (4x analog 0-3.3V via ADS1115 A0..A3)
+🏠 Pressure + temperature monitor Raspberry Pi Zero 2 WHC with (4x analog 0-3.3V via ADS1115 A0..A3)
 
 ## ⚙️ Install
 ```bash
