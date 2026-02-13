@@ -129,22 +129,58 @@ def cleanup_old(con: sqlite3.Connection):
     cutoff = now_ts() - int(KEEP_HOURS * 3600)
     con.execute("DELETE FROM samples WHERE ts < ?", (cutoff,))
 
+def demo_sensor_values(ts: int) -> dict:
+    # Outside temperature: day/night sinusoid (24h period, sign switch ~every 12h).
+    day_phase = (2.0 * math.pi * (ts % 86400)) / 86400.0
+    outside = clamp(10.0 * math.sin(day_phase - (math.pi / 2.0)), -10.0, 10.0)
+
+    # Tank temperatures: proportional heating/cooling cycle every ~3.5 hours.
+    tank_period = 3.5 * 3600.0
+    tank_phase = (2.0 * math.pi * (ts % tank_period)) / tank_period
+    tank_wave = (math.sin(tank_phase - (math.pi / 2.0)) + 1.0) / 2.0  # 0..1
+
+    # Slight day bias so daytime is marginally warmer overall.
+    day_bias = (outside / 10.0) * 0.05
+    top_ratio = clamp(tank_wave + day_bias, 0.0, 1.0)
+    bottom_ratio = clamp((tank_wave * 0.78) + 0.10 + (day_bias * 0.6), 0.0, 1.0)
+
+    top = 20.0 + (70.0 * top_ratio)       # 20..90
+    bottom = 20.0 + (45.0 * bottom_ratio) # 20..65
+    bottom = min(bottom, top - 2.0)
+    bottom = clamp(bottom, 20.0, 65.0)
+
+    # Pressure follows top temperature (hotter top -> higher pressure).
+    top_norm = clamp((top - 20.0) / 70.0, 0.0, 1.0)
+    pressure_wave = 0.03 * math.sin(tank_phase + 0.4)
+    pressure = clamp(1.0 + top_norm + pressure_wave, 1.0, 2.0)
+
+    return {
+        "pressure": pressure,
+        "t1": top,
+        "t2": bottom,
+        "t3": outside,
+    }
+
 def logger_thread():
     channels = sensor_init() if not DEMO_MODE else {}
     while True:
         try:
             ts = now_ts()
             rows = []
+            simulated = demo_sensor_values(ts) if DEMO_MODE else {}
             for idx, sensor in enumerate(ENABLED_SENSORS):
                 key = sensor["key"]
                 if DEMO_MODE:
                     value_min = sensor["value_min"]
                     value_max = sensor["value_max"]
                     span = value_max - value_min
-                    midpoint = value_min + (span / 2.0)
-                    amplitude = span * 0.35
-                    phase = ((ts % 300) / 300.0) * (2.0 * math.pi) + idx
-                    value = clamp(midpoint + amplitude * math.sin(phase), value_min, value_max)
+                    raw_value = simulated.get(key)
+                    if raw_value is None:
+                        midpoint = value_min + (span / 2.0)
+                        amplitude = span * 0.35
+                        phase = ((ts % 300) / 300.0) * (2.0 * math.pi) + idx
+                        raw_value = midpoint + amplitude * math.sin(phase)
+                    value = clamp(raw_value, value_min, value_max)
                     ratio = (value - value_min) / span if abs(span) > 1e-9 else 0.0
                     voltage = clamp(ratio * V_FULL_SCALE, 0.0, V_FULL_SCALE)
                 else:

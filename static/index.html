@@ -251,17 +251,25 @@
   }
 
   // Adaptive X-axis label for selected trend range.
+  // 24h -> time only, 7d+ -> date/day only, middle windows -> compact day + time.
   function formatTrendTick(isoText) {
+    const d = new Date(isoText);
     if (selectedHours <= 24) {
       return formatTime24(isoText);
+    }
+    if (selectedHours >= 168) {
+      return new Intl.DateTimeFormat('en-GB', {
+        weekday: 'short',
+        day: '2-digit',
+        month: '2-digit'
+      }).format(d);
     }
     return new Intl.DateTimeFormat('en-GB', {
       day: '2-digit',
       month: '2-digit',
       hour: '2-digit',
-      minute: '2-digit',
       hour12: false
-    }).format(new Date(isoText));
+    }).format(d);
   }
 
   // Build live sensor cards and show/hide drum elements for enabled sensors
@@ -294,8 +302,8 @@
     const topLabel = document.querySelector('.tempBarScaleTop');
     const bottomLabel = document.querySelector('.tempBarScaleBottom');
     if (sensorByKey.t1 && topLabel && bottomLabel) {
-      topLabel.textContent = `${Number(sensorByKey.t1.value_max).toFixed(0)}C`;
-      bottomLabel.textContent = `${Number(sensorByKey.t1.value_min).toFixed(0)}C`;
+      topLabel.textContent = '100C';
+      bottomLabel.textContent = '0C';
     }
   }
 
@@ -340,8 +348,8 @@
         if (sensor.key === 't1') {
           const pointer = document.getElementById('tempPointerTop');
           if (pointer) {
-            const minV = sensorByKey.t1 ? Number(sensorByKey.t1.value_min) : 0;
-            const maxV = sensorByKey.t1 ? Number(sensorByKey.t1.value_max) : 100;
+            const minV = 0;
+            const maxV = 100;
             const span = maxV - minV;
             const ratioRaw = span > 0 ? (Number(sensor.value) - minV) / span : 0;
             const ratio = Math.max(0, Math.min(1, ratioRaw));
@@ -407,21 +415,24 @@
           grid: { color: 'rgba(67, 92, 120, 0.28)' },
           ticks: {
             color: '#9db0c8',
+            font: { size: 9 },
             callback: function(value, index) {
               const label = this.getLabelForValue(value);
               const labels = this.chart?.data?.labels || [];
               const total = labels.length;
               if (!total) return '';
 
-              // Keep ~8 readable ticks regardless of selected range.
-              const step = Math.max(1, Math.floor(total / 8));
+              // Keep readable bottom labels by range.
+              const targetTicks = selectedHours <= 24 ? 8 : (selectedHours >= 168 ? 6 : 7);
+              const step = Math.max(1, Math.ceil(total / targetTicks));
               if (index % step === 0 || index === total - 1) {
                 return formatTrendTick(label);
               }
               return '';
             },
             maxRotation: 0,
-            autoSkip: false
+            autoSkip: false,
+            maxTicksLimit: 10
           }
         }
       },
@@ -492,8 +503,8 @@
 
       const barMin = barDatasets.length ? Math.min(...barDatasets.map(ds => Number(ds.value_min))) : 0;
       const barMax = barDatasets.length ? Math.max(...barDatasets.map(ds => Number(ds.value_max))) : 4;
-      const tempMin = tempDatasets.length ? Math.min(...tempDatasets.map(ds => Number(ds.value_min))) : 0;
-      const tempMax = tempDatasets.length ? Math.max(...tempDatasets.map(ds => Number(ds.value_max))) : 100;
+      const tempMin = -40;
+      const tempMax = 100;
 
       chart.options.scales.y_bar.display = barDatasets.length > 0;
       chart.options.scales.y_temp.display = tempDatasets.length > 0;

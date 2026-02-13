@@ -22,20 +22,20 @@ PRESSURE_MAX = 4.0
 T1_NAME = "Accumuliator Temp. Top"
 T1_CHANNEL = 1
 T1_UNIT = "°C"
-T1_MIN = 0.0
-T1_MAX = 100.0
+T1_MIN = 20.0
+T1_MAX = 90.0
 
 T2_NAME = "Accumulator Temp. Bottom"
 T2_CHANNEL = 2
 T2_UNIT = "°C"
-T2_MIN = 0.0
-T2_MAX = 100.0
+T2_MIN = 20.0
+T2_MAX = 65.0
 
 T3_NAME = "Outside Temp"
 T3_CHANNEL = 3
 T3_UNIT = "°C"
-T3_MIN = 0.0
-T3_MAX = 100.0
+T3_MIN = -10.0
+T3_MAX = 10.0
 
 SENSORS = [
     {

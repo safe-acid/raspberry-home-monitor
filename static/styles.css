@@ -70,6 +70,11 @@
       margin-top: 10px;
       font-size: 13px;
     }
+    /* View tab bottom update timestamp: keep compact to avoid overlap */
+    #viewMeta {
+      font-size: 8.7px;
+      line-height: 1.2;
+    }
     /* Utility */
     .hidden {
       display: none;
@@ -158,20 +163,21 @@
     }
     /* Drum (Accumulator) view layout */
     .drumWrap {
-      min-height: 520px;
+      min-height: 430px;
       display: flex;
       align-items: center;
       justify-content: center;
     }
     .drumScene {
       position: relative;
-      width: min(70vw, 520px);
-      max-width: 520px;
+      width: min(62vw, 440px);
+      max-width: 340px;
       aspect-ratio: 9 / 16;
       --tank-top: 22%;
       --tank-bottom: 14%;
       --tank-left: 20%;
       --tank-right: 18%;
+      margin-bottom: -60px;
     }
     /* Drum tank body */
     .drumSquare {
@@ -190,7 +196,7 @@
       top: 3%;
       left: 50%;
       transform: translateX(-50%);
-      font-size: clamp(18px, 2.6vw, 30px);
+      font-size: clamp(16px, 2.1vw, 24px);
       font-weight: 800;
       letter-spacing: 0.5px;
       text-transform: uppercase;
@@ -202,18 +208,18 @@
       background: #0d1622;
       border: 1px solid #33485f;
       border-radius: 12px;
-      padding: 8px 10px;
-      min-width: 150px;
+      padding: 7px 8px;
+      min-width: 130px;
     }
     .drumTag .label {
-      font-size: 11px;
+      font-size: 10px;
       opacity: 0.8;
       text-transform: uppercase;
       letter-spacing: 0.4px;
     }
     .drumTag .reading {
       margin-top: 3px;
-      font-size: 20px;
+      font-size: 16px;
       font-weight: 700;
       line-height: 1.1;
     }
@@ -221,13 +227,13 @@
     .drumTop { top: calc(var(--tank-top) + 10px); left: 50%; transform: translateX(-50%); text-align: center; }
     .drumBottom { bottom: calc(var(--tank-bottom) + 10px); left: 50%; transform: translateX(-50%); text-align: center; }
     .drumPressure { top: 50%; left: 50%; transform: translate(-50%, -50%); text-align: center; }
-    .drumOutside { top: 12%; left: 50%; transform: translateX(-50%); text-align: center; min-width: 170px; }
+    .drumOutside { top: 12%; left: 50%; transform: translateX(-50%); text-align: center; min-width: 140px; }
     /* Left temperature gradient bar and moving top-temp pointer */
     .tempBarWrap {
       position: absolute;
       top: var(--tank-top);
       bottom: var(--tank-bottom);
-      left: calc(var(--tank-left) - 74px);
+      left: calc(var(--tank-left) - 60px);
       width: 38px;
       display: flex;
       align-items: stretch;
@@ -264,27 +270,27 @@
     }
     /* Mobile tuning to avoid overlap */
     @media (max-width: 700px) {
-      .drumWrap { min-height: 460px; }
+      .drumWrap { min-height: 340px; }
       .drumScene {
-        width: min(92vw, 430px);
+        width: min(82vw, 340px);
       }
       .accuTitle {
-        font-size: 20px;
-      }
-      .drumTag {
-        min-width: 130px;
-        padding: 7px 8px;
-      }
-      .drumTag .label {
-        font-size: 10px;
-      }
-      .drumTag .reading {
         font-size: 16px;
       }
+      .drumTag {
+        min-width: 120px;
+        padding: 6px 7px;
+      }
+      .drumTag .label {
+        font-size: 9px;
+      }
+      .drumTag .reading {
+        font-size: 15px;
+      }
       .drumOutside {
-        min-width: 140px;
+        min-width: 128px;
       }
       .tempBarWrap {
-        left: calc(var(--tank-left) - 60px);
+        left: calc(var(--tank-left) - 54px);
       }
     }
