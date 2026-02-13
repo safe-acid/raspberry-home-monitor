@@ -1,0 +1,290 @@
+    /* Base page colors, typography, and spacing */
+    body {
+      font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+      margin: 0;
+      background: #0b0f14;
+      color: #e6edf3;
+    }
+    /* Top navigation tabs */
+    .topbar {
+      display: flex;
+      gap: 10px;
+      padding: 14px;
+      background: #0f1620;
+      position: sticky;
+      top: 0;
+      z-index: 10;
+    }
+    .tabbtn {
+      padding: 10px 14px;
+      border-radius: 12px;
+      border: 1px solid #263241;
+      background: #0b0f14;
+      color: #e6edf3;
+      cursor: pointer;
+    }
+    .tabbtn.active {
+      background: #142235;
+      border-color: #3a567a;
+    }
+    /* Shared layout and card components (Live View cards) */
+    .wrap {
+      padding: 18px;
+      max-width: 1100px;
+      margin: 0 auto;
+    }
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 14px;
+    }
+    .card {
+      background: #0f1620;
+      border: 1px solid #263241;
+      border-radius: 16px;
+      padding: 16px;
+    }
+    .name {
+      font-size: 15px;
+      opacity: 0.82;
+      margin-bottom: 10px;
+      min-height: 38px;
+    }
+    .valueRow {
+      display: flex;
+      align-items: baseline;
+      gap: 8px;
+    }
+    .big {
+      font-size: 44px;
+      font-weight: 800;
+      letter-spacing: -0.5px;
+      line-height: 1;
+    }
+    .unit {
+      font-size: 18px;
+      opacity: 0.82;
+    }
+    .meta {
+      opacity: 0.74;
+      margin-top: 10px;
+      font-size: 13px;
+    }
+    /* Utility */
+    .hidden {
+      display: none;
+    }
+    /* Main tab containers */
+    #tabView {
+      margin-top: 16px;
+    }
+    #tabTrend {
+      margin-top: 16px;
+    }
+    /* Trend panel shell and segmented header */
+    .trendPanel {
+      background: linear-gradient(180deg, rgba(15, 24, 40, 0.95), rgba(10, 17, 30, 0.95));
+      border: 1px solid #1f3048;
+      border-radius: 14px;
+      overflow: hidden;
+      box-shadow: inset 0 0 40px rgba(14, 29, 50, 0.4);
+    }
+    .trendHead {
+      display: flex;
+      justify-content: center;
+      padding: 12px 10px 10px;
+      border-bottom: 1px solid #22354f;
+    }
+    .trendSeg {
+      display: inline-flex;
+      border: 1px solid #263a57;
+      border-radius: 10px;
+      overflow: hidden;
+      background: rgba(9, 17, 30, 0.8);
+    }
+    .trendSegItem {
+      padding: 8px 18px;
+      min-width: 120px;
+      text-align: center;
+      font-size: 15px;
+      letter-spacing: 0.2px;
+      color: #97aac2;
+      border-right: 1px solid #263a57;
+      text-transform: none;
+    }
+    .trendSegItem:last-child {
+      border-right: 0;
+    }
+    .trendSegItem.active {
+      background: linear-gradient(180deg, #234d87, #1b3e6f);
+      color: #d7e6f8;
+      font-weight: 600;
+    }
+    /* Trend range buttons (1h/24h/3d/7d) */
+    .rangebar {
+      display: flex;
+      gap: 8px;
+      padding: 10px 12px 4px;
+      justify-content: center;
+      flex-wrap: wrap;
+    }
+    .rangebtn {
+      padding: 6px 10px;
+      border-radius: 8px;
+      border: 1px solid #274062;
+      background: #101a2b;
+      color: #9eb1c8;
+      cursor: pointer;
+      font-size: 12px;
+    }
+    .rangebtn.active {
+      background: #1d3d6a;
+      border-color: #3f6591;
+      color: #deebf9;
+    }
+    /* Chart canvas and footer meta text */
+    .trendCanvasWrap {
+      padding: 6px 10px 0;
+    }
+    canvas {
+      width: 100% !important;
+      height: 360px !important;
+    }
+    #trendMeta {
+      text-align: center;
+      padding: 10px 12px 12px;
+      border-top: 1px solid #22354f;
+      margin-top: 8px;
+    }
+    /* Drum (Accumulator) view layout */
+    .drumWrap {
+      min-height: 520px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .drumScene {
+      position: relative;
+      width: min(70vw, 520px);
+      max-width: 520px;
+      aspect-ratio: 9 / 16;
+      --tank-top: 22%;
+      --tank-bottom: 14%;
+      --tank-left: 20%;
+      --tank-right: 18%;
+    }
+    /* Drum tank body */
+    .drumSquare {
+      position: absolute;
+      top: var(--tank-top);
+      bottom: var(--tank-bottom);
+      left: var(--tank-left);
+      right: var(--tank-right);
+      border: 4px solid #4f6f95;
+      border-radius: 18px;
+      background: linear-gradient(180deg, rgba(48, 76, 111, 0.22), rgba(22, 34, 53, 0.45));
+      box-shadow: inset 0 0 40px rgba(22, 34, 53, 0.65);
+    }
+    .accuTitle {
+      position: absolute;
+      top: 3%;
+      left: 50%;
+      transform: translateX(-50%);
+      font-size: clamp(18px, 2.6vw, 30px);
+      font-weight: 800;
+      letter-spacing: 0.5px;
+      text-transform: uppercase;
+      color: #cfe0f5;
+    }
+    /* Drum labels/readings cards */
+    .drumTag {
+      position: absolute;
+      background: #0d1622;
+      border: 1px solid #33485f;
+      border-radius: 12px;
+      padding: 8px 10px;
+      min-width: 150px;
+    }
+    .drumTag .label {
+      font-size: 11px;
+      opacity: 0.8;
+      text-transform: uppercase;
+      letter-spacing: 0.4px;
+    }
+    .drumTag .reading {
+      margin-top: 3px;
+      font-size: 20px;
+      font-weight: 700;
+      line-height: 1.1;
+    }
+    /* Drum sensor card positions */
+    .drumTop { top: calc(var(--tank-top) + 10px); left: 50%; transform: translateX(-50%); text-align: center; }
+    .drumBottom { bottom: calc(var(--tank-bottom) + 10px); left: 50%; transform: translateX(-50%); text-align: center; }
+    .drumPressure { top: 50%; left: 50%; transform: translate(-50%, -50%); text-align: center; }
+    .drumOutside { top: 12%; left: 50%; transform: translateX(-50%); text-align: center; min-width: 170px; }
+    /* Left temperature gradient bar and moving top-temp pointer */
+    .tempBarWrap {
+      position: absolute;
+      top: var(--tank-top);
+      bottom: var(--tank-bottom);
+      left: calc(var(--tank-left) - 74px);
+      width: 38px;
+      display: flex;
+      align-items: stretch;
+      justify-content: center;
+    }
+    .tempBar {
+      width: 18px;
+      height: 100%;
+      border-radius: 10px;
+      border: 1px solid #7188a3;
+      background: linear-gradient(to top, #9fd8ff 0%, #ff2e2e 100%);
+      box-shadow: inset 0 0 8px rgba(0, 0, 0, 0.25);
+      position: relative;
+    }
+    .tempBarScaleTop,
+    .tempBarScaleBottom {
+      position: absolute;
+      left: -42px;
+      width: 36px;
+      font-size: 11px;
+      opacity: 0.85;
+      text-align: right;
+    }
+    .tempBarScaleTop { top: -8px; }
+    .tempBarScaleBottom { bottom: -8px; }
+    .tempPointer {
+      position: absolute;
+      left: 2px;
+      width: 14px;
+      height: 3px;
+      background: #fff;
+      transform: translateY(-2px);
+      box-shadow: 0 0 6px rgba(255, 255, 255, 0.7);
+    }
+    /* Mobile tuning to avoid overlap */
+    @media (max-width: 700px) {
+      .drumWrap { min-height: 460px; }
+      .drumScene {
+        width: min(92vw, 430px);
+      }
+      .accuTitle {
+        font-size: 20px;
+      }
+      .drumTag {
+        min-width: 130px;
+        padding: 7px 8px;
+      }
+      .drumTag .label {
+        font-size: 10px;
+      }
+      .drumTag .reading {
+        font-size: 16px;
+      }
+      .drumOutside {
+        min-width: 140px;
+      }
+      .tempBarWrap {
+        left: calc(var(--tank-left) - 60px);
+      }
+    }

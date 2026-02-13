@@ -1,0 +1,549 @@
+<!doctype html>
+<html lang="__LANG__">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <title>System Sensors Monitor</title>
+
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <link rel="stylesheet" href="/static/styles.css"/>
+</head>
+<body>
+  <!-- Top-level navigation -->
+  <div class="topbar">
+    <button class="tabbtn active" id="tabNowBtn">Sensors</button>
+    <button class="tabbtn" id="tabTrendBtn">Trend</button>
+    <button class="tabbtn" id="tabViewBtn">View</button>
+  </div>
+
+  <div class="wrap">
+    <!-- Live View tab: sensor cards -->
+    <div id="tabNow">
+      <div class="grid" id="sensorGrid"></div>
+    </div>
+
+    <!-- Trend tab: styled panel + range buttons + chart -->
+    <div class="hidden" id="tabTrend">
+      <div class="trendPanel">
+        <div class="trendHead">
+          <div class="trendSeg">
+            <div class="trendSegItem" id="trendSensorTitle">All Sensors</div>
+            <div class="trendSegItem active" id="trendRangeTitle">Trend 24h</div>
+          </div>
+        </div>
+        <div class="rangebar">
+          <button class="rangebtn" data-hours="1">1h</button>
+          <button class="rangebtn active" data-hours="24">24h</button>
+          <button class="rangebtn" data-hours="72">3d</button>
+          <button class="rangebtn" data-hours="168">7d</button>
+        </div>
+        <div class="trendCanvasWrap">
+          <canvas id="sChart"></canvas>
+        </div>
+        <div class="meta" id="trendMeta">Waiting for data...</div>
+      </div>
+    </div>
+
+    <!-- View tab: accumulator drum schematic -->
+    <div class="card hidden" id="tabView">
+      <div class="drumWrap">
+        <div class="drumScene">
+          <div class="accuTitle">Accumulator</div>
+          <div class="drumSquare"></div>
+
+          <div class="tempBarWrap hidden" id="drum_tempbar_t1">
+            <div class="tempBar">
+              <div class="tempBarScaleTop">100C</div>
+              <div class="tempBarScaleBottom">0C</div>
+              <div class="tempPointer" id="tempPointerTop"></div>
+            </div>
+          </div>
+
+          <div class="drumTag drumTop hidden" id="drum_t1">
+            <div class="label">Top Temperature</div>
+            <div class="reading" id="drum_read_t1">--.--</div>
+          </div>
+
+          <div class="drumTag drumBottom hidden" id="drum_t2">
+            <div class="label">Bottom Temperature</div>
+            <div class="reading" id="drum_read_t2">--.--</div>
+          </div>
+
+          <div class="drumTag drumPressure hidden" id="drum_pressure">
+            <div class="label">Pressure</div>
+            <div class="reading" id="drum_read_pressure">--.--</div>
+          </div>
+
+          <div class="drumTag drumOutside hidden" id="drum_t3">
+            <div class="label">Outside Temperature</div>
+            <div class="reading" id="drum_read_t3">--.--</div>
+          </div>
+        </div>
+      </div>
+      <div class="meta" id="viewMeta">Waiting for data...</div>
+    </div>
+  </div>
+
+<script>
+  // Tab switching elements
+  const tabNowBtn = document.getElementById('tabNowBtn');
+  const tabTrendBtn = document.getElementById('tabTrendBtn');
+  const tabViewBtn = document.getElementById('tabViewBtn');
+  const tabNow = document.getElementById('tabNow');
+  const tabTrend = document.getElementById('tabTrend');
+  const tabView = document.getElementById('tabView');
+  const trendSensorTitle = document.getElementById('trendSensorTitle');
+  const trendRangeTitle = document.getElementById('trendRangeTitle');
+  const LANG = "__LANG__";
+
+  const I18N = {
+    en: {
+      pageTitle: 'System Sensors Monitor',
+      tabSensors: 'Sensors',
+      tabTrend: 'Trend',
+      tabView: 'View',
+      allSensors: 'All Sensors',
+      trendLabel: 'Trend',
+      waiting: 'Waiting for data...',
+      noData: 'no data',
+      accumulator: 'Accumulator',
+      outsideTemperature: 'Outside Temperature',
+      topTemperature: 'Top Temperature',
+      pressure: 'Pressure',
+      bottomTemperature: 'Bottom Temperature',
+      updated: 'Updated',
+      points: 'Points',
+      sensorsShown: 'Sensors shown',
+      timeLast: 'time (Last {hours}h)',
+      api: 'API'
+    },
+    ru: {
+      pageTitle: 'Монитор Датчиков Системы',
+      tabSensors: 'Датчики',
+      tabTrend: 'Тренд',
+      tabView: 'Схема',
+      allSensors: 'Все датчики',
+      trendLabel: 'Тренд',
+      waiting: 'Ожидание данных...',
+      noData: 'нет данных',
+      accumulator: 'Аккумулятор',
+      outsideTemperature: 'Температура снаружи',
+      topTemperature: 'Температура сверху',
+      pressure: 'Давление',
+      bottomTemperature: 'Температура снизу',
+      updated: 'Обновлено',
+      points: 'Точек',
+      sensorsShown: 'Показано датчиков',
+      timeLast: 'время (за {hours}ч)',
+      api: 'API'
+    }
+  };
+
+  function t(key) {
+    const langPack = I18N[LANG] || I18N.en;
+    return langPack[key] || I18N.en[key] || key;
+  }
+
+  function trSensorName(key, fallbackName) {
+    if (LANG !== 'ru') return fallbackName;
+    const map = {
+      pressure: t('pressure'),
+      t1: t('topTemperature'),
+      t2: t('bottomTemperature'),
+      t3: t('outsideTemperature')
+    };
+    return map[key] || fallbackName;
+  }
+
+  // Compact names for Trend legend.
+  function trendSeriesName(key, fallbackName) {
+    const map = LANG === 'ru'
+      ? {
+          t1: 'T°C Верх',
+          t2: 'T°C Низ',
+          t3: 'T°C Снаружи'
+        }
+      : {
+          t1: 'T°C Top',
+          t2: 'T°C Bottom',
+          t3: 'T°C Outside'
+        };
+    if (map[key]) return map[key];
+    return trSensorName(key, fallbackName);
+  }
+
+  function applyStaticTranslations() {
+    document.title = t('pageTitle');
+    tabNowBtn.textContent = t('tabSensors');
+    tabTrendBtn.textContent = t('tabTrend');
+    tabViewBtn.textContent = t('tabView');
+    trendSensorTitle.textContent = t('allSensors');
+    trendRangeTitle.textContent = `${t('trendLabel')} ${selectedHours}h`;
+
+    const trendMeta = document.getElementById('trendMeta');
+    const viewMeta = document.getElementById('viewMeta');
+    if (trendMeta) trendMeta.textContent = t('waiting');
+    if (viewMeta) viewMeta.textContent = t('waiting');
+
+    const title = document.querySelector('.accuTitle');
+    if (title) title.textContent = t('accumulator');
+
+    const drumT1 = document.querySelector('#drum_t1 .label');
+    const drumT2 = document.querySelector('#drum_t2 .label');
+    const drumP = document.querySelector('#drum_pressure .label');
+    const drumT3 = document.querySelector('#drum_t3 .label');
+    if (drumT1) drumT1.textContent = t('topTemperature');
+    if (drumT2) drumT2.textContent = t('bottomTemperature');
+    if (drumP) drumP.textContent = t('pressure');
+    if (drumT3) drumT3.textContent = t('outsideTemperature');
+  }
+
+  // Central tab switch helper
+  function setTab(tabName) {
+    tabNowBtn.classList.toggle('active', tabName === 'now');
+    tabTrendBtn.classList.toggle('active', tabName === 'trend');
+    tabViewBtn.classList.toggle('active', tabName === 'view');
+    tabNow.classList.toggle('hidden', tabName !== 'now');
+    tabTrend.classList.toggle('hidden', tabName !== 'trend');
+    tabView.classList.toggle('hidden', tabName !== 'view');
+  }
+
+  tabNowBtn.onclick = () => setTab('now');
+  tabTrendBtn.onclick = () => setTab('trend');
+  tabViewBtn.onclick = () => setTab('view');
+
+  // Live cards + trend range controls state
+  const sensorGrid = document.getElementById('sensorGrid');
+  const rangeButtons = Array.from(document.querySelectorAll('.rangebtn'));
+  let sensorConfig = [];
+  let sensorByKey = {};
+  let selectedHours = 24;
+  let trendVisibility = {};
+  let trendLastPoints = 0;
+  let trendLastUpdatedText = '';
+
+  // Line color palette for multi-sensor trend
+  const palette = [
+    '#5bc0eb', '#fde74c', '#9bc53d', '#e55934',
+    '#fa7921', '#b388eb', '#7bdff2', '#f07167'
+  ];
+
+  // Format epoch seconds as 24-hour date/time text.
+  function formatDateTime24(tsSec) {
+    return new Intl.DateTimeFormat('en-GB', {
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit',
+      hour: '2-digit',
+      minute: '2-digit',
+      second: '2-digit',
+      hour12: false
+    }).format(new Date(tsSec * 1000));
+  }
+
+  // Format ISO label (series) as 24-hour time-only text.
+  function formatTime24(isoText) {
+    return new Intl.DateTimeFormat('en-GB', {
+      hour: '2-digit',
+      minute: '2-digit',
+      hour12: false
+    }).format(new Date(isoText));
+  }
+
+  // Adaptive X-axis label for selected trend range.
+  function formatTrendTick(isoText) {
+    if (selectedHours <= 24) {
+      return formatTime24(isoText);
+    }
+    return new Intl.DateTimeFormat('en-GB', {
+      day: '2-digit',
+      month: '2-digit',
+      hour: '2-digit',
+      minute: '2-digit',
+      hour12: false
+    }).format(new Date(isoText));
+  }
+
+  // Build live sensor cards and show/hide drum elements for enabled sensors
+  function renderSensorCards() {
+    sensorGrid.innerHTML = '';
+    sensorByKey = {};
+    sensorConfig.forEach(sensor => {
+      sensorByKey[sensor.key] = sensor;
+      const card = document.createElement('div');
+      card.className = 'card';
+      card.innerHTML = `
+        <div class="name">${trSensorName(sensor.key, sensor.name)}</div>
+        <div class="valueRow">
+          <span class="big" id="value_${sensor.key}">--.--</span>
+          <span class="unit">${sensor.unit}</span>
+        </div>
+        <div class="meta" id="meta_${sensor.key}">${t('waiting')}</div>
+      `;
+      sensorGrid.appendChild(card);
+    });
+
+    ['pressure', 't1', 't2', 't3'].forEach(key => {
+      const el = document.getElementById(`drum_${key}`);
+      if (!el) return;
+      const exists = Boolean(sensorByKey[key]);
+      el.classList.toggle('hidden', !exists);
+    });
+    const tempBar = document.getElementById('drum_tempbar_t1');
+    if (tempBar) tempBar.classList.toggle('hidden', !sensorByKey.t1);
+    const topLabel = document.querySelector('.tempBarScaleTop');
+    const bottomLabel = document.querySelector('.tempBarScaleBottom');
+    if (sensorByKey.t1 && topLabel && bottomLabel) {
+      topLabel.textContent = `${Number(sensorByKey.t1.value_max).toFixed(0)}C`;
+      bottomLabel.textContent = `${Number(sensorByKey.t1.value_min).toFixed(0)}C`;
+    }
+  }
+
+  // Load enabled sensors and display names from backend config
+  async function loadConfig() {
+    const r = await fetch('/api/config');
+    const j = await r.json();
+    if (!j.ok) return;
+    sensorConfig = j.sensors || [];
+    trendVisibility = j.trend_visibility || {};
+    renderSensorCards();
+  }
+
+  // Poll latest values and update Live View + Drum View
+  async function refreshLatest() {
+    try {
+      const r = await fetch('/api/latest');
+      const j = await r.json();
+      if (!j.ok) {
+        sensorConfig.forEach(sensor => {
+          const metaEl = document.getElementById(`meta_${sensor.key}`);
+          if (metaEl) metaEl.textContent = `${t('api')}: ${j.error || t('noData')}`;
+        });
+        document.getElementById('viewMeta').textContent = `${t('api')}: ${j.error || t('noData')}`;
+        return;
+      }
+
+      (j.sensors || []).forEach(sensor => {
+        const valueEl = document.getElementById(`value_${sensor.key}`);
+        const metaEl = document.getElementById(`meta_${sensor.key}`);
+        if (!valueEl || !metaEl) return;
+
+        valueEl.textContent = Number(sensor.value).toFixed(2);
+        const sensorTime = sensor.local || formatDateTime24(sensor.ts);
+        metaEl.textContent =
+          `A${sensor.channel} | ${Number(sensor.voltage).toFixed(3)} V | ${sensorTime}`;
+
+        const drumRead = document.getElementById(`drum_read_${sensor.key}`);
+        if (drumRead) {
+          drumRead.textContent = `${Number(sensor.value).toFixed(2)} ${sensor.unit}`;
+        }
+        if (sensor.key === 't1') {
+          const pointer = document.getElementById('tempPointerTop');
+          if (pointer) {
+            const minV = sensorByKey.t1 ? Number(sensorByKey.t1.value_min) : 0;
+            const maxV = sensorByKey.t1 ? Number(sensorByKey.t1.value_max) : 100;
+            const span = maxV - minV;
+            const ratioRaw = span > 0 ? (Number(sensor.value) - minV) / span : 0;
+            const ratio = Math.max(0, Math.min(1, ratioRaw));
+            pointer.style.top = `${(1 - ratio) * 100}%`;
+          }
+        }
+      });
+      const updatedText = j.server_now_local || formatDateTime24(Number(j.server_now_ts || Math.floor(Date.now() / 1000)));
+      document.getElementById('viewMeta').textContent = `${t('updated')}: ${updatedText}`;
+    } catch (e) {}
+  }
+
+  // Save trend legend visibility in DB so other clients get same state.
+  async function saveTrendVisibility() {
+    try {
+      await fetch('/api/trend_visibility', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ trend_visibility: trendVisibility })
+      });
+    } catch (e) {}
+  }
+
+  function countVisibleSensors(datasets) {
+    let visible = 0;
+    (datasets || []).forEach(ds => {
+      if (trendVisibility[ds.key] !== false) visible += 1;
+    });
+    return visible;
+  }
+
+  function renderTrendMeta(allDatasets) {
+    document.getElementById('trendMeta').textContent =
+      `${t('points')}: ${trendLastPoints} • ${t('sensorsShown')}: ${countVisibleSensors(allDatasets)} • ${t('updated')}: ${trendLastUpdatedText}`;
+  }
+
+  // Trend chart setup (Chart.js)
+  const ctx = document.getElementById('sChart').getContext('2d');
+  const chart = new Chart(ctx, {
+    type: 'line',
+    data: { labels: [], datasets: [] },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      interaction: { mode: 'nearest', intersect: false },
+      scales: {
+        y_bar: {
+          type: 'linear',
+          position: 'left',
+          title: { display: true, text: 'bar' },
+          ticks: { color: '#a3b4cc' },
+          grid: { color: 'rgba(67, 92, 120, 0.34)' }
+        },
+        y_temp: {
+          type: 'linear',
+          position: 'right',
+          title: { display: true, text: '°C' },
+          ticks: { color: '#a3b4cc' },
+          grid: { drawOnChartArea: false }
+        },
+        x: {
+          title: { display: true, text: 'time (Last 24h)' },
+          grid: { color: 'rgba(67, 92, 120, 0.28)' },
+          ticks: {
+            color: '#9db0c8',
+            callback: function(value, index) {
+              const label = this.getLabelForValue(value);
+              const labels = this.chart?.data?.labels || [];
+              const total = labels.length;
+              if (!total) return '';
+
+              // Keep ~8 readable ticks regardless of selected range.
+              const step = Math.max(1, Math.floor(total / 8));
+              if (index % step === 0 || index === total - 1) {
+                return formatTrendTick(label);
+              }
+              return '';
+            },
+            maxRotation: 0,
+            autoSkip: false
+          }
+        }
+      },
+      plugins: {
+        legend: {
+          display: true,
+          labels: { color: '#b7c6d8', boxWidth: 14 },
+          onClick: async (event, legendItem, legend) => {
+            const dsIndex = legendItem.datasetIndex;
+            const ds = legend.chart.data.datasets[dsIndex];
+            if (!ds || !ds.key) return;
+
+            const currentlyVisible = legend.chart.isDatasetVisible(dsIndex);
+            const nextVisible = !currentlyVisible;
+            legend.chart.setDatasetVisibility(dsIndex, nextVisible);
+            trendVisibility[ds.key] = nextVisible;
+            legend.chart.update('none');
+            renderTrendMeta(legend.chart.data.datasets || []);
+            await saveTrendVisibility();
+          }
+        },
+        tooltip: {
+          callbacks: {
+            title: items => formatDateTime24(new Date(items[0].label).getTime() / 1000),
+            label: item => {
+              const ds = item.dataset;
+              const unit = ds.unit || '';
+              return ` ${ds.label}: ${Number(item.raw).toFixed(2)} ${unit}`;
+            }
+          }
+        }
+      }
+    }
+  });
+
+  // Change selected trend window (1h/24h/3d/7d)
+  function setRange(hours) {
+    selectedHours = Number(hours);
+    trendRangeTitle.textContent = `${t('trendLabel')} ${selectedHours}h`;
+    rangeButtons.forEach(btn => {
+      const btnHours = Number(btn.dataset.hours);
+      btn.classList.toggle('active', btnHours === selectedHours);
+    });
+    refreshSeries();
+  }
+
+  rangeButtons.forEach(btn => {
+    btn.addEventListener('click', () => setRange(btn.dataset.hours));
+  });
+
+  // Fetch trend series for selected range and redraw chart
+  async function refreshSeries() {
+    try {
+      const r = await fetch(`/api/series?hours=${selectedHours}`);
+      const j = await r.json();
+      if (!j.ok) {
+        document.getElementById('trendMeta').textContent = `${t('api')}: ${j.error || t('noData')}`;
+        return;
+      }
+
+      chart.data.labels = j.labels || [];
+      const allDatasets = j.datasets || [];
+      if (!allDatasets.length) return;
+      trendVisibility = j.trend_visibility || trendVisibility;
+
+      const barDatasets = allDatasets.filter(ds => ds.unit === 'bar');
+      const tempDatasets = allDatasets.filter(ds => ds.unit !== 'bar');
+
+      const barMin = barDatasets.length ? Math.min(...barDatasets.map(ds => Number(ds.value_min))) : 0;
+      const barMax = barDatasets.length ? Math.max(...barDatasets.map(ds => Number(ds.value_max))) : 4;
+      const tempMin = tempDatasets.length ? Math.min(...tempDatasets.map(ds => Number(ds.value_min))) : 0;
+      const tempMax = tempDatasets.length ? Math.max(...tempDatasets.map(ds => Number(ds.value_max))) : 100;
+
+      chart.options.scales.y_bar.display = barDatasets.length > 0;
+      chart.options.scales.y_temp.display = tempDatasets.length > 0;
+      chart.options.scales.y_bar.min = barMin;
+      chart.options.scales.y_bar.max = barMax;
+      chart.options.scales.y_temp.min = tempMin;
+      chart.options.scales.y_temp.max = tempMax;
+      trendSensorTitle.textContent = t('allSensors');
+
+      chart.data.datasets = allDatasets.map((ds, i) => {
+        const color = ds.key === 'pressure'
+          ? '#4aa0ff'
+          : palette[i % palette.length];
+        return {
+          key: ds.key,
+          label: trendSeriesName(ds.key, ds.name),
+          unit: ds.unit,
+          data: ds.values,
+          borderColor: color,
+          backgroundColor: ds.key === 'pressure' ? 'rgba(36, 102, 186, 0.20)' : color,
+          yAxisID: ds.unit === 'bar' ? 'y_bar' : 'y_temp',
+          tension: 0.14,
+          pointRadius: 0,
+          borderWidth: 2,
+          fill: ds.key === 'pressure'
+        };
+      });
+
+      chart.data.datasets.forEach((ds, idx) => {
+        const isVisible = trendVisibility[ds.key] !== false;
+        chart.setDatasetVisibility(idx, isVisible);
+      });
+
+      chart.update('none');
+      chart.options.scales.x.title.text = t('timeLast').replace('{hours}', String(selectedHours));
+      trendLastPoints = (j.labels || []).length;
+      trendLastUpdatedText = j.server_now_local || formatDateTime24(Number(j.server_now_ts || Math.floor(Date.now() / 1000)));
+      renderTrendMeta(allDatasets);
+    } catch (e) {}
+  }
+
+  // Initial data load + polling intervals
+  (async function init() {
+    applyStaticTranslations();
+    await loadConfig();
+    await refreshLatest();
+    await refreshSeries();
+    setInterval(refreshLatest, 3000);
+    setInterval(refreshSeries, 60000);
+  })();
+</script>
+</body>
+</html>
