@@ -1,5 +1,14 @@
-# Raspberry Home
-🏠 Pressure + temperature monitor Raspberry Pi Zero 2 WHC with (4x analog 0-3.3V via ADS1115 A0..A3)
+# Raspberry Home Live Monitoring
+🏠 Live pressure and temperature monitoring system for a wood boiler accumulator.
+
+
+
+### 🔌 Hardware
+1. Raspberry Pi Zero 2 WHC 
+2. Temperature Transmitter PT100 (4-20mA)
+3. Pressure Transducer (4-20mA)
+4. Current-to-voltage converter 40mA to 0-3.3V
+5. ADS1115 A0..A3
 
 ## ⚙️ Install
 ```bash
