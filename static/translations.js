@@ -1,0 +1,42 @@
+window.APP_I18N = {
+  en: {
+    pageTitle: 'System Sensors Monitor',
+    tabSensors: 'Sensors',
+    tabTrend: 'Trend',
+    tabView: 'View',
+    allSensors: 'All Sensors',
+    trendLabel: 'Trend',
+    waiting: 'Waiting for data...',
+    noData: 'no data',
+    accumulator: 'Accumulator',
+    outsideTemperature: 'Outside Temperature',
+    topTemperature: 'Top Temperature',
+    pressure: 'Pressure',
+    bottomTemperature: 'Bottom Temperature',
+    updated: 'Updated',
+    points: 'Points',
+    sensorsShown: 'Sensors shown',
+    timeLast: 'time (Last {hours}h)',
+    api: 'API'
+  },
+  ru: {
+    pageTitle: 'Монитор Датчиков Системы',
+    tabSensors: 'Датчики',
+    tabTrend: 'Тренд',
+    tabView: 'Схема',
+    allSensors: 'Все датчики',
+    trendLabel: 'Тренд',
+    waiting: 'Ожидание данных...',
+    noData: 'нет данных',
+    accumulator: 'Аккумулятор',
+    outsideTemperature: 'Температура снаружи',
+    topTemperature: 'Температура сверху',
+    pressure: 'Давление',
+    bottomTemperature: 'Температура снизу',
+    updated: 'Обновлено',
+    points: 'Точек',
+    sensorsShown: 'Показано датчиков',
+    timeLast: 'время (за {hours}ч)',
+    api: 'API'
+  }
+};

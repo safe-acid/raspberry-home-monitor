@@ -17,6 +17,11 @@ source .venv/bin/activate
 uvicorn app:app --host 0.0.0.0 --port 8000
 ```
 
+## 🌐 Routes
+1. English UI: `/en`
+2. Russian UI: `/ru`
+3. Default route `/` redirects to English (`/en`)
+
 ## 🧩 Sensor Config
 Edit `config.py`:
 1. Enable/disable: `PRESSURE`, `T1`, `T2`, `T3`
