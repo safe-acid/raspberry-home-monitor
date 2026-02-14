@@ -7,7 +7,7 @@
 1. Raspberry Pi Zero 2 WHC 
 2. Temperature Transmitter PT100 (4-20mA)
 3. Pressure Transducer (4-20mA)
-4. Current-to-voltage converter 40mA to 0-3.3V
+4. Current-to-voltage converter 4-20mA to 0-3.3V
 5. ADS1115 A0..A3
 
 ## ⚙️ Install
