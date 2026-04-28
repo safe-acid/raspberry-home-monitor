@@ -119,7 +119,8 @@ def sensor_init():
     channels = {}
     for sensor in ENABLED_SENSORS:
         channel_id = sensor["channel"]
-        channels[sensor["key"]] = AnalogIn(ads, getattr(ADS, f"P{channel_id}"))
+        # Use channel index directly (0-3)
+        channels[sensor["key"]] = AnalogIn(ads, channel_id)
     return channels
 
 def now_ts() -> int:
@@ -162,15 +163,27 @@ def demo_sensor_values(ts: int) -> dict:
     }
 
 def logger_thread():
-    channels = sensor_init() if not DEMO_MODE else {}
+    channels = None
+    use_demo = DEMO_MODE
+    
+    if not DEMO_MODE:
+        try:
+            channels = sensor_init()
+            print(f"[LOGGER] Sensors initialized: {list(channels.keys())}")
+            use_demo = False
+        except Exception as e:
+            print(f"[LOGGER] ERROR initializing sensors: {e}")
+            print(f"[LOGGER] Falling back to DEMO_MODE")
+            use_demo = True
+    
     while True:
         try:
             ts = now_ts()
             rows = []
-            simulated = demo_sensor_values(ts) if DEMO_MODE else {}
+            simulated = demo_sensor_values(ts) if use_demo else {}
             for idx, sensor in enumerate(ENABLED_SENSORS):
                 key = sensor["key"]
-                if DEMO_MODE:
+                if use_demo or channels is None:
                     value_min = sensor["value_min"]
                     value_max = sensor["value_max"]
                     span = value_max - value_min

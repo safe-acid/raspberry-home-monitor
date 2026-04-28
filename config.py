@@ -1,6 +1,10 @@
+#Connections on ADS1115:
+# A0 - PT, A1 - T1(Accumulator Temp. Top), A2 - T2(Accumulator Temp. Bottom), A3 - T3(Outside Temp)
+# DB_PATH = "pressure.db"
+
 DB_PATH = "pressure.db"
 
-LOG_EVERY_SEC = 20
+LOG_EVERY_SEC = 2
 KEEP_HOURS = 24
 V_FULL_SCALE = 3.3
 # Enable simulation/debugging withoiut connecting sensors.
@@ -17,25 +21,25 @@ PRESSURE_NAME = "System Pressure"
 PRESSURE_CHANNEL = 0
 PRESSURE_UNIT = "bar"
 PRESSURE_MIN = 0.0
-PRESSURE_MAX = 4.0
+PRESSURE_MAX = 5.0
 
 T1_NAME = "Accumuliator Temp. Top"
 T1_CHANNEL = 1
 T1_UNIT = "°C"
-T1_MIN = 20.0
-T1_MAX = 90.0
+T1_MIN = -50.0
+T1_MAX = 150.0
 
 T2_NAME = "Accumulator Temp. Bottom"
 T2_CHANNEL = 2
 T2_UNIT = "°C"
-T2_MIN = 20.0
-T2_MAX = 65.0
+T2_MIN = -50.0
+T2_MAX = 150.0
 
 T3_NAME = "Outside Temp"
 T3_CHANNEL = 3
 T3_UNIT = "°C"
-T3_MIN = -10.0
-T3_MAX = 10.0
+T3_MIN = -50.0
+T3_MAX = 150.0
 
 SENSORS = [
     {
