@@ -69,3 +69,6 @@ uvicorn app:app --host 127.0.0.1 --port 8000
 
 ### Tab 3
 ![Tab 3](example_images/tab3.png)
+
+### Tab 4
+![Tab 4](example_images/hardware.jpg)
